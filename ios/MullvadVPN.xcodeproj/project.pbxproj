@@ -253,6 +253,7 @@
 		58CCA0162242560B004F3011 /* UIColor+Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CCA0152242560B004F3011 /* UIColor+Palette.swift */; };
 		58CCA01822426713004F3011 /* AccountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CCA01722426713004F3011 /* AccountViewController.swift */; };
 		58CCA01E2242787B004F3011 /* AccountTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CCA01D2242787B004F3011 /* AccountTextField.swift */; };
+		58CD4A5229D4343700F49301 /* RedeemVoucherOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CD4A5129D4343700F49301 /* RedeemVoucherOperation.swift */; };
 		58CE38C728992C8700A6D6E5 /* WireGuardAdapterError+Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58E07298288031D5008902F8 /* WireGuardAdapterError+Localization.swift */; };
 		58CE38C828992C9200A6D6E5 /* TunnelMonitorDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58E072A428814C28008902F8 /* TunnelMonitorDelegate.swift */; };
 		58CE5E64224146200008646E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CE5E63224146200008646E /* AppDelegate.swift */; };
@@ -874,6 +875,7 @@
 		58CCA0152242560B004F3011 /* UIColor+Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Palette.swift"; sourceTree = "<group>"; };
 		58CCA01722426713004F3011 /* AccountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountViewController.swift; sourceTree = "<group>"; };
 		58CCA01D2242787B004F3011 /* AccountTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountTextField.swift; sourceTree = "<group>"; };
+		58CD4A5129D4343700F49301 /* RedeemVoucherOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedeemVoucherOperation.swift; sourceTree = "<group>"; };
 		58CE5E60224146200008646E /* MullvadVPN.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MullvadVPN.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		58CE5E63224146200008646E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		58CE5E65224146200008646E /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
@@ -1213,6 +1215,7 @@
 				5803B4B12940A48700C23744 /* TunnelStore.swift */,
 				5842102F282D8A3C00F24E46 /* UpdateAccountDataOperation.swift */,
 				58421031282E42B000F24E46 /* UpdateDeviceDataOperation.swift */,
+				58CD4A5129D4343700F49301 /* RedeemVoucherOperation.swift */,
 			);
 			path = TunnelManager;
 			sourceTree = "<group>";
@@ -2757,6 +2760,7 @@
 				583FE00E29C0D586006E85F9 /* OutOfTimeCoordinator.swift in Sources */,
 				58A8EE5E2976DB00009C0F8D /* StorePaymentManagerError+Display.swift in Sources */,
 				580F8B8328197881002E0998 /* TunnelSettingsV2.swift in Sources */,
+				58CD4A5229D4343700F49301 /* RedeemVoucherOperation.swift in Sources */,
 				58A8EE5A2976BFBB009C0F8D /* SKError+Localized.swift in Sources */,
 				5859A55329CD9B1300F66591 /* ChangeLog.swift in Sources */,
 				58BBB39729717E0C00C8DB7C /* ApplicationCoordinator.swift in Sources */,
