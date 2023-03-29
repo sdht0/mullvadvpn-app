@@ -252,6 +252,10 @@
 		58CCA0162242560B004F3011 /* UIColor+Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CCA0152242560B004F3011 /* UIColor+Palette.swift */; };
 		58CCA01822426713004F3011 /* AccountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CCA01722426713004F3011 /* AccountViewController.swift */; };
 		58CCA01E2242787B004F3011 /* AccountTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CCA01D2242787B004F3011 /* AccountTextField.swift */; };
+		58CD4A4B29D42C0500F49301 /* RedeemVoucherController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CD4A4729D42C0400F49301 /* RedeemVoucherController.swift */; };
+		58CD4A4C29D42C0500F49301 /* RedeemVoucherInputViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CD4A4829D42C0400F49301 /* RedeemVoucherInputViewController.swift */; };
+		58CD4A4D29D42C0500F49301 /* RedeemVoucherSucceededViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CD4A4929D42C0500F49301 /* RedeemVoucherSucceededViewController.swift */; };
+		58CD4A4E29D42C0500F49301 /* RedeemVoucherInputContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CD4A4A29D42C0500F49301 /* RedeemVoucherInputContentView.swift */; };
 		58CD4A5029D42C4C00F49301 /* VoucherTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CD4A4F29D42C4C00F49301 /* VoucherTextField.swift */; };
 		58CD4A5229D4343700F49301 /* RedeemVoucherOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CD4A5129D4343700F49301 /* RedeemVoucherOperation.swift */; };
 		58CE38C728992C8700A6D6E5 /* WireGuardAdapterError+Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58E07298288031D5008902F8 /* WireGuardAdapterError+Localization.swift */; };
@@ -875,6 +879,10 @@
 		58CCA0152242560B004F3011 /* UIColor+Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Palette.swift"; sourceTree = "<group>"; };
 		58CCA01722426713004F3011 /* AccountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountViewController.swift; sourceTree = "<group>"; };
 		58CCA01D2242787B004F3011 /* AccountTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountTextField.swift; sourceTree = "<group>"; };
+		58CD4A4729D42C0400F49301 /* RedeemVoucherController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RedeemVoucherController.swift; sourceTree = "<group>"; };
+		58CD4A4829D42C0400F49301 /* RedeemVoucherInputViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RedeemVoucherInputViewController.swift; sourceTree = "<group>"; };
+		58CD4A4929D42C0500F49301 /* RedeemVoucherSucceededViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RedeemVoucherSucceededViewController.swift; sourceTree = "<group>"; };
+		58CD4A4A29D42C0500F49301 /* RedeemVoucherInputContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RedeemVoucherInputContentView.swift; sourceTree = "<group>"; };
 		58CD4A4F29D42C4C00F49301 /* VoucherTextField.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VoucherTextField.swift; sourceTree = "<group>"; };
 		58CD4A5129D4343700F49301 /* RedeemVoucherOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedeemVoucherOperation.swift; sourceTree = "<group>"; };
 		58CE5E60224146200008646E /* MullvadVPN.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MullvadVPN.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1714,6 +1722,10 @@
 		58CD4A4629D42BF200F49301 /* RedeemVoucher */ = {
 			isa = PBXGroup;
 			children = (
+				58CD4A4729D42C0400F49301 /* RedeemVoucherController.swift */,
+				58CD4A4A29D42C0500F49301 /* RedeemVoucherInputContentView.swift */,
+				58CD4A4829D42C0400F49301 /* RedeemVoucherInputViewController.swift */,
+				58CD4A4929D42C0500F49301 /* RedeemVoucherSucceededViewController.swift */,
 				58CD4A4F29D42C4C00F49301 /* VoucherTextField.swift */,
 			);
 			path = RedeemVoucher;
@@ -2609,6 +2621,7 @@
 				5803B4B02940A47300C23744 /* TunnelConfiguration.swift in Sources */,
 				587EB672271451E300123C75 /* PreferencesViewModel.swift in Sources */,
 				586A950C290125EE007BAF2B /* AlertPresenter.swift in Sources */,
+				58CD4A4C29D42C0500F49301 /* RedeemVoucherInputViewController.swift in Sources */,
 				58C3F4F92964B08300D72515 /* MapViewController.swift in Sources */,
 				584D26C6270C8741004EA533 /* SettingsDNSTextCell.swift in Sources */,
 				58F2E148276A307400A79513 /* MapConnectionStatusOperation.swift in Sources */,
@@ -2624,6 +2637,7 @@
 				588527B2276B3F0700BAA373 /* LoadTunnelConfigurationOperation.swift in Sources */,
 				58F1311527E0B2AB007AC5BC /* Result+Extensions.swift in Sources */,
 				5867770E29096984006F721F /* OutOfTimeInteractor.swift in Sources */,
+				58CD4A4E29D42C0500F49301 /* RedeemVoucherInputContentView.swift in Sources */,
 				58F185AA298A3E3E00075977 /* TunnelCoordinator.swift in Sources */,
 				58F8AC0E25D3F8CE002BE0ED /* ProblemReportReviewViewController.swift in Sources */,
 				5878A27129091CF20096FC88 /* AccountInteractor.swift in Sources */,
@@ -2665,6 +2679,7 @@
 				5846227726E22A7C0035F7C2 /* StorePaymentManagerDelegate.swift in Sources */,
 				58EF581125D69DB400AEBA94 /* StatusImageView.swift in Sources */,
 				58907D9524D17B4E00CFC3F5 /* DisconnectSplitButton.swift in Sources */,
+				58CD4A4B29D42C0500F49301 /* RedeemVoucherController.swift in Sources */,
 				58EE2E3B272FF814003BFF93 /* SettingsDataSourceDelegate.swift in Sources */,
 				5823FA5426CE49F700283BF8 /* TunnelObserver.swift in Sources */,
 				5888AD87227B17950051EB06 /* SelectLocationViewController.swift in Sources */,
@@ -2765,6 +2780,7 @@
 				58FD5BF024238EB300112C88 /* SKProduct+Formatting.swift in Sources */,
 				58B43C1925F77DB60002C8C3 /* TunnelControlView.swift in Sources */,
 				5811DE50239014550011EB53 /* NEVPNStatus+Debug.swift in Sources */,
+				58CD4A4D29D42C0500F49301 /* RedeemVoucherSucceededViewController.swift in Sources */,
 				58C3A4B222456F1B00340BDB /* AccountInputGroupView.swift in Sources */,
 				58ACF64B26553C3F00ACE4B7 /* SettingsSwitchCell.swift in Sources */,
 				583FE00E29C0D586006E85F9 /* OutOfTimeCoordinator.swift in Sources */,
