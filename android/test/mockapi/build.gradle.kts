@@ -35,6 +35,12 @@ android {
         abortOnError = true
         warningsAsErrors = true
     }
+
+    buildTypes {
+        getByName("debug") {
+            matchingFallbacks += "ossDebug"
+        }
+    }
 }
 
 configure<org.owasp.dependencycheck.gradle.extension.DependencyCheckExtension> {

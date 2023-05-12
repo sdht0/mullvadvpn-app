@@ -12,34 +12,27 @@ echo "Building Mullvad VPN $PRODUCT_VERSION for Android"
 echo ""
 
 BUILD_TYPE="release"
-GRADLE_BUILD_TYPE="release"
-GRADLE_TASK="assembleRelease"
-BUNDLE_TASK="bundleRelease"
-BUILT_APK_SUFFIX="-release"
-FILE_SUFFIX=""
+GRADLE_BUILD_FLAVORS="full"
+GRADLE_TASKS="assembleFullRelease"
+BUNDLE_TASK="bundlePlayRelease"
 CARGO_ARGS="--release"
 EXTRA_WGGO_ARGS=""
-BUILD_BUNDLE="no"
 CARGO_TARGET_DIR=${CARGO_TARGET_DIR:-"target"}
 SKIP_STRIPPING=${SKIP_STRIPPING:-"no"}
 
 while [ ! -z "${1:-""}" ]; do
     if [[ "${1:-""}" == "--dev-build" ]]; then
         BUILD_TYPE="debug"
-        GRADLE_BUILD_TYPE="debug"
-        GRADLE_TASK="assembleDebug"
-        BUNDLE_TASK="bundleDebug"
-        BUILT_APK_SUFFIX="-debug"
+        GRADLE_TASKS="assembleFullDebug"
         FILE_SUFFIX="-debug"
         CARGO_ARGS="--features api-override"
     elif [[ "${1:-""}" == "--fdroid" ]]; then
-        GRADLE_BUILD_TYPE="fdroid"
-        GRADLE_TASK="assembleFdroid"
-        BUNDLE_TASK="bundleFdroid"
-        BUILT_APK_SUFFIX="-fdroid-unsigned"
+        GRADLE_BUILD_FLAVORS="fdroid"
+        GRADLE_TASKS="assembleFdroidRelease"
         EXTRA_WGGO_ARGS="--no-docker"
     elif [[ "${1:-""}" == "--app-bundle" ]]; then
-        BUILD_BUNDLE="yes"
+        GRADLE_BUILD_FLAVORS="full play"
+        GRADLE_TASKS="assembleFullRelease assemblePlayRelease"
     elif [[ "${1:-""}" == "--no-docker" ]]; then
         EXTRA_WGGO_ARGS="--no-docker"
     elif [[ "${1:-""}" == "--skip-stripping" ]]; then
@@ -49,7 +42,7 @@ while [ ! -z "${1:-""}" ]; do
     shift 1
 done
 
-if [[ "$GRADLE_BUILD_TYPE" == "release" ]]; then
+if [[ "$BUILD_TYPE" == "release" && "$GRADLE_BUILD_FLAVORS" != "fdroid" ]]; then
     if [ ! -f "$SCRIPT_DIR/android/credentials/keystore.properties" ]; then
         echo "ERROR: No keystore.properties file found" >&2
         echo "       Please configure the signing keys as described in the README" >&2
@@ -121,18 +114,47 @@ echo "Updating relays.json..."
 cargo run --bin relay_list $CARGO_ARGS > build/relays.json
 
 cd "$SCRIPT_DIR/android"
-$GRADLE_CMD --console plain "$GRADLE_TASK"
+
+
+for TASK in $GRADLE_TASKS; do
+    $GRADLE_CMD --console plain "$TASK"
+done
 
 mkdir -p "$SCRIPT_DIR/dist"
-cp  "$SCRIPT_DIR/android/app/build/outputs/apk/$GRADLE_BUILD_TYPE/app${BUILT_APK_SUFFIX}.apk" \
-    "$SCRIPT_DIR/dist/MullvadVPN-${PRODUCT_VERSION}${FILE_SUFFIX}.apk"
 
-if [[ "$BUILD_BUNDLE" == "yes" ]]; then
-    $GRADLE_CMD --console plain "$BUNDLE_TASK"
+for FLAVOR in $GRADLE_BUILD_FLAVORS; do
 
-    cp  "$SCRIPT_DIR/android/app/build/outputs/bundle/$GRADLE_BUILD_TYPE/app${BUILT_APK_SUFFIX}.aab" \
-        "$SCRIPT_DIR/dist/MullvadVPN-${PRODUCT_VERSION}${FILE_SUFFIX}.aab"
-fi
+    if [[ "$BUILD_TYPE" == "release" && "$FLAVOR" == "fdroid" ]]; then
+        SOURCE_FILE_NAME="app-${FLAVOR}-${BUILD_TYPE}-unsigned"
+    else
+        SOURCE_FILE_NAME="app-${FLAVOR}-${BUILD_TYPE}"
+    fi
+
+    if [[ "$BUILD_TYPE" == "release" ]]; then
+        FILE_SUFFIX=""
+    else
+        FILE_SUFFIX="-debug"
+    fi
+
+    # Skip flavor in name for the full archive since that is that is deemed the main/default release
+    # artifact without any marketplace adaptions etc.
+    if [[ "$FLAVOR" == "full" ]]; then
+        TARGET_FILE_NAME="MullvadVPN-${PRODUCT_VERSION}${FILE_SUFFIX}"
+    else
+        TARGET_FILE_NAME="MullvadVPN-${PRODUCT_VERSION}${FILE_SUFFIX}.${FLAVOR}"
+    fi
+
+    if [[ "$FLAVOR" != "play" ]]; then
+        cp  "$SCRIPT_DIR/android/app/build/outputs/apk/$FLAVOR/$BUILD_TYPE/$SOURCE_FILE_NAME.apk" \
+            "$SCRIPT_DIR/dist/$TARGET_FILE_NAME.apk"
+    else
+        $GRADLE_CMD --console plain "$BUNDLE_TASK"
+
+        cp  "$SCRIPT_DIR/android/app/build/outputs/bundle/$FLAVOR${BUILD_TYPE^}/$SOURCE_FILE_NAME.aab" \
+            "$SCRIPT_DIR/dist/$TARGET_FILE_NAME.aab"
+    fi
+
+done
 
 echo "**********************************"
 echo ""

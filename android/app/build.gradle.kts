@@ -54,15 +54,13 @@ android {
 
     if (keystorePropertiesFile.exists()) {
         signingConfigs {
-            create("release") {
+            create(SigningConfigs.RELEASE) {
                 storeFile = file("$credentialsPath/app-keys.jks")
                 storePassword = keystoreProperties.getProperty("storePassword")
                 keyAlias = keystoreProperties.getProperty("keyAlias")
                 keyPassword = keystoreProperties.getProperty("keyPassword")
             }
         }
-
-        buildTypes { getByName("release") { signingConfig = signingConfigs.getByName("release") } }
     }
 
     buildTypes {
@@ -74,19 +72,26 @@ android {
                 "proguard-rules.pro"
             )
         }
+    }
 
-        create("fdroid") {
-            initWith(buildTypes.getByName("release"))
-            isMinifyEnabled = true
-            isShrinkResources = true
+    flavorDimensions += FlavorDimensions.DEFAULT
+
+    productFlavors {
+        create(ProductFlavors.FULL) {
+            dimension = FlavorDimensions.DEFAULT
+            signingConfig = signingConfigs.getByName("release")
+        }
+        create(ProductFlavors.FDROID) {
+            dimension = FlavorDimensions.DEFAULT
             signingConfig = null
-            matchingFallbacks += "release"
+            buildTypes.getByName(BuildTypes.RELEASE).isMinifyEnabled = false
+            buildTypes.getByName(BuildTypes.RELEASE).isShrinkResources = false
         }
-
-        create("leakCanary") {
-            initWith(buildTypes.getByName("debug"))
-            matchingFallbacks += "debug"
+        create(ProductFlavors.PLAY) {
+            dimension = FlavorDimensions.DEFAULT
+            signingConfig = signingConfigs.getByName("release")
         }
+        create(ProductFlavors.LEAK_CANARY) { dimension = FlavorDimensions.DEFAULT }
     }
 
     sourceSets {
@@ -152,6 +157,19 @@ android {
     }
 
     project.tasks.preBuild.dependsOn("ensureJniDirectoryExist")
+}
+
+androidComponents {
+    beforeVariants { variantBuilder ->
+        variantBuilder.enabled =
+            variantBuilder.let { variant ->
+                when {
+                    variant.buildType == BuildTypes.RELEASE &&
+                        variant.flavorName == ProductFlavors.LEAK_CANARY -> false
+                    else -> true
+                }
+            }
+    }
 }
 
 configure<org.owasp.dependencycheck.gradle.extension.DependencyCheckExtension> {

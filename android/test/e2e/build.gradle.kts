@@ -48,6 +48,12 @@ android {
 
     testOptions { execution = "ANDROIDX_TEST_ORCHESTRATOR" }
 
+    buildTypes {
+        getByName("debug") {
+            matchingFallbacks += "ossDebug"
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
