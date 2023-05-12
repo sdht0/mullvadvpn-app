@@ -64,6 +64,9 @@ android {
     }
 
     buildTypes {
+        getByName("debug") {
+            signingConfig = null
+        }
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -79,7 +82,7 @@ android {
     productFlavors {
         create(ProductFlavors.FULL) {
             dimension = FlavorDimensions.DEFAULT
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.findByName("release")
         }
         create(ProductFlavors.FDROID) {
             dimension = FlavorDimensions.DEFAULT
@@ -89,7 +92,7 @@ android {
         }
         create(ProductFlavors.PLAY) {
             dimension = FlavorDimensions.DEFAULT
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.findByName("release")
         }
         create(ProductFlavors.LEAK_CANARY) { dimension = FlavorDimensions.DEFAULT }
     }
