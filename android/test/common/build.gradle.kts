@@ -18,9 +18,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
-    kotlinOptions {
-        jvmTarget = Versions.jvmTarget
-    }
+    kotlinOptions { jvmTarget = Versions.jvmTarget }
 
     lint {
         lintConfig = file("${rootProject.projectDir}/config/lint.xml")
@@ -30,11 +28,7 @@ android {
 }
 
 androidComponents {
-    beforeVariants { variantBuilder ->
-        variantBuilder.apply {
-            enable = name != "release"
-        }
-    }
+    beforeVariants { variantBuilder -> variantBuilder.apply { enable = name != "release" } }
 }
 
 dependencies {

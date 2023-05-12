@@ -21,18 +21,14 @@ android {
         )
     }
 
-    testOptions {
-        execution = "ANDROIDX_TEST_ORCHESTRATOR"
-    }
+    testOptions { execution = "ANDROIDX_TEST_ORCHESTRATOR" }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
-    kotlinOptions {
-        jvmTarget = Versions.jvmTarget
-    }
+    kotlinOptions { jvmTarget = Versions.jvmTarget }
 
     lint {
         lintConfig = file("${rootProject.projectDir}/config/lint.xml")
