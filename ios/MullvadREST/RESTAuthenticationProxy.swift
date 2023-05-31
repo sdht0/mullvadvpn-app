@@ -47,13 +47,12 @@ extension REST {
                 with: responseDecoder
             )
 
-            return addOperation(
+            return makeTaskFactory(
                 name: "get-access-token",
                 retryStrategy: retryStrategy,
                 requestHandler: requestHandler,
-                responseHandler: responseHandler,
-                completionHandler: completion
-            )
+                responseHandler: responseHandler
+            ).execute(completionHandler: completion)
         }
     }
 

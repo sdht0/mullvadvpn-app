@@ -42,13 +42,12 @@ extension REST {
                 with: responseDecoder
             )
 
-            return addOperation(
+            return makeTaskFactory(
                 name: "get-api-addrs",
                 retryStrategy: retryStrategy,
                 requestHandler: requestHandler,
-                responseHandler: responseHandler,
-                completionHandler: completionHandler
-            )
+                responseHandler: responseHandler
+            ).execute(completionHandler: completionHandler)
         }
 
         public func getRelays(
@@ -99,13 +98,12 @@ extension REST {
                     }
                 }
 
-            return addOperation(
+            return makeTaskFactory(
                 name: "get-relays",
                 retryStrategy: retryStrategy,
                 requestHandler: requestHandler,
-                responseHandler: responseHandler,
-                completionHandler: completionHandler
-            )
+                responseHandler: responseHandler
+            ).execute(completionHandler: completionHandler)
         }
 
         public func createApplePayment(
@@ -160,13 +158,12 @@ extension REST {
                     }
                 }
 
-            return addOperation(
+            return makeTaskFactory(
                 name: "create-apple-payment",
                 retryStrategy: retryStrategy,
                 requestHandler: requestHandler,
-                responseHandler: responseHandler,
-                completionHandler: completionHandler
-            )
+                responseHandler: responseHandler
+            ).execute(completionHandler: completionHandler)
         }
 
         public func sendProblemReport(
@@ -200,13 +197,12 @@ extension REST {
                     }
                 }
 
-            return addOperation(
+            return makeTaskFactory(
                 name: "send-problem-report",
                 retryStrategy: retryStrategy,
                 requestHandler: requestHandler,
-                responseHandler: responseHandler,
-                completionHandler: completionHandler
-            )
+                responseHandler: responseHandler
+            ).execute(completionHandler: completionHandler)
         }
     }
 

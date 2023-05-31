@@ -62,3 +62,14 @@ extension Result {
         }
     }
 }
+
+extension Result where Failure == Error {
+    /// Initialize `Result` using async throwing closure.
+    public init(catchingAsync body: () async throws -> Success) async {
+        do {
+            self = try await .success(body())
+        } catch {
+            self = .failure(error)
+        }
+    }
+}

@@ -74,13 +74,12 @@ extension REST {
                     }
                 }
 
-            return addOperation(
+            return makeTaskFactory(
                 name: "get-device",
                 retryStrategy: retryStrategy,
                 requestHandler: requestHandler,
-                responseHandler: responseHandler,
-                completionHandler: completion
-            )
+                responseHandler: responseHandler
+            ).execute(completionHandler: completion)
         }
 
         /// Fetch a list of created devices.
@@ -109,24 +108,45 @@ extension REST {
                 with: responseDecoder
             )
 
-            return addOperation(
+            return makeTaskFactory(
                 name: "get-devices",
                 retryStrategy: retryStrategy,
                 requestHandler: requestHandler,
-                responseHandler: responseHandler,
-                completionHandler: completion
-            )
+                responseHandler: responseHandler
+            ).execute(completionHandler: completion)
         }
 
         /// Create new device.
-        /// The completion handler will receive a `CreateDeviceResponse.created(Device)` on success.
-        /// Other `CreateDeviceResponse` variants describe errors.
+        /// The completion handler will receive a `Device` on success.
         public func createDevice(
             accountNumber: String,
             request: CreateDeviceRequest,
             retryStrategy: REST.RetryStrategy,
             completion: @escaping CompletionHandler<Device>
         ) -> Cancellable {
+            return createDeviceTaskFactory(accountNumber: accountNumber, request: request, retryStrategy: retryStrategy)
+                .execute(completionHandler: completion)
+        }
+
+        /// Create new device.
+        /// Returns `Device` upon success.
+        public func createDevice(
+            accountNumber: String,
+            request: CreateDeviceRequest,
+            retryStrategy: REST.RetryStrategy
+        ) async throws -> Device {
+            return try await createDeviceTaskFactory(
+                accountNumber: accountNumber,
+                request: request,
+                retryStrategy: retryStrategy
+            ).execute()
+        }
+
+        private func createDeviceTaskFactory(
+            accountNumber: String,
+            request: CreateDeviceRequest,
+            retryStrategy: REST.RetryStrategy
+        ) -> ProxyTaskFactory<Device> {
             let requestHandler = AnyRequestHandler(
                 createURLRequest: { endpoint, authorization in
                     var requestBuilder = try self.requestFactory.createRequestBuilder(
@@ -148,24 +168,52 @@ extension REST {
                 with: responseDecoder
             )
 
-            return addOperation(
+            return makeTaskFactory(
                 name: "create-device",
                 retryStrategy: retryStrategy,
                 requestHandler: requestHandler,
-                responseHandler: responseHandler,
-                completionHandler: completion
+                responseHandler: responseHandler
             )
         }
 
         /// Delete device by identifier.
-        /// The completion handler will receive `true` if device is successfully removed,
-        /// otherwise `false` if device is not found or already removed.
+        /// The completion handler will receive `true` if device is successfully removed, otherwise `false` if device
+        /// is not found or already removed.
         public func deleteDevice(
             accountNumber: String,
             identifier: String,
             retryStrategy: REST.RetryStrategy,
             completion: @escaping CompletionHandler<Bool>
         ) -> Cancellable {
+            return deleteDeviceTaskFactory(
+                accountNumber: accountNumber,
+                identifier: identifier,
+                retryStrategy: retryStrategy
+            )
+            .execute(completionHandler: completion)
+        }
+
+        /// Delete device by identifier.
+        /// Returns `true` if device is successfully removed, otherwise `false` if device is not found or already
+        /// removed.
+        public func deleteDevice(
+            accountNumber: String,
+            identifier: String,
+            retryStrategy: REST.RetryStrategy
+        ) async throws -> Bool {
+            return try await deleteDeviceTaskFactory(
+                accountNumber: accountNumber,
+                identifier: identifier,
+                retryStrategy: retryStrategy
+            )
+            .execute()
+        }
+
+        private func deleteDeviceTaskFactory(
+            accountNumber: String,
+            identifier: String,
+            retryStrategy: REST.RetryStrategy
+        ) -> ProxyTaskFactory<Bool> {
             let requestHandler = AnyRequestHandler(
                 createURLRequest: { endpoint, authorization in
                     var path: URLPathTemplate = "devices/{id}"
@@ -211,12 +259,11 @@ extension REST {
                     }
                 }
 
-            return addOperation(
+            return makeTaskFactory(
                 name: "delete-device",
                 retryStrategy: retryStrategy,
                 requestHandler: requestHandler,
-                responseHandler: responseHandler,
-                completionHandler: completion
+                responseHandler: responseHandler
             )
         }
 
@@ -228,6 +275,36 @@ extension REST {
             retryStrategy: REST.RetryStrategy,
             completion: @escaping CompletionHandler<Device>
         ) -> Cancellable {
+            rotateDeviceKeyTaskFactory(
+                accountNumber: accountNumber,
+                identifier: identifier,
+                publicKey: publicKey,
+                retryStrategy: retryStrategy
+            )
+            .execute(completionHandler: completion)
+        }
+
+        /// Rotate device key
+        public func rotateDeviceKey(
+            accountNumber: String,
+            identifier: String,
+            publicKey: PublicKey,
+            retryStrategy: REST.RetryStrategy
+        ) async throws -> Device {
+            return try await rotateDeviceKeyTaskFactory(
+                accountNumber: accountNumber,
+                identifier: identifier,
+                publicKey: publicKey,
+                retryStrategy: retryStrategy
+            ).execute()
+        }
+
+        private func rotateDeviceKeyTaskFactory(
+            accountNumber: String,
+            identifier: String,
+            publicKey: PublicKey,
+            retryStrategy: REST.RetryStrategy
+        ) -> ProxyTaskFactory<Device> {
             let requestHandler = AnyRequestHandler(
                 createURLRequest: { endpoint, authorization in
                     var path: URLPathTemplate = "devices/{id}/pubkey"
@@ -264,12 +341,11 @@ extension REST {
                 with: responseDecoder
             )
 
-            return addOperation(
+            return makeTaskFactory(
                 name: "rotate-device-key",
                 retryStrategy: retryStrategy,
                 requestHandler: requestHandler,
-                responseHandler: responseHandler,
-                completionHandler: completion
+                responseHandler: responseHandler
             )
         }
     }

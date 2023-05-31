@@ -387,6 +387,14 @@ final class SimulatorTunnelProviderManager: NSObject, VPNTunnelProviderManagerPr
         completionHandler(error)
     }
 
+    func loadFromPreferences() async throws {
+        try await withUnsafeThrowingContinuation { continuation in
+            loadFromPreferences { error in
+                continuation.resume(with: error.map { .failure($0) } ?? .success(()))
+            }
+        }
+    }
+
     func saveToPreferences(completionHandler: ((Error?) -> Void)?) {
         Self.tunnelsLock.lock()
 
@@ -399,6 +407,14 @@ final class SimulatorTunnelProviderManager: NSObject, VPNTunnelProviderManagerPr
         Self.tunnelsLock.unlock()
 
         completionHandler?(nil)
+    }
+
+    func saveToPreferences() async throws {
+        try await withUnsafeThrowingContinuation { continuation in
+            saveToPreferences { error in
+                continuation.resume(with: error.map { .failure($0) } ?? .success(()))
+            }
+        }
     }
 
     func removeFromPreferences(completionHandler: ((Error?) -> Void)?) {
@@ -415,6 +431,14 @@ final class SimulatorTunnelProviderManager: NSObject, VPNTunnelProviderManagerPr
         Self.tunnelsLock.unlock()
 
         completionHandler?(error)
+    }
+
+    func removeFromPreferences() async throws {
+        try await withUnsafeThrowingContinuation { continuation in
+            removeFromPreferences { error in
+                continuation.resume(with: error.map { .failure($0) } ?? .success(()))
+            }
+        }
     }
 
     static func == (lhs: SimulatorTunnelProviderManager, rhs: SimulatorTunnelProviderManager) -> Bool {
