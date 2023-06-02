@@ -34,6 +34,7 @@ import net.mullvad.mullvadvpn.compose.constant.ContentType
 import net.mullvad.mullvadvpn.compose.constant.SplitTunnelingContentKey
 import net.mullvad.mullvadvpn.compose.extensions.itemWithDivider
 import net.mullvad.mullvadvpn.compose.state.SplitTunnelingUiState
+import net.mullvad.mullvadvpn.compose.theme.AlphaDescription
 import net.mullvad.mullvadvpn.compose.theme.AppTheme
 import net.mullvad.mullvadvpn.compose.theme.Dimens
 import org.koin.androidx.compose.get
@@ -87,7 +88,7 @@ fun SplitTunnelingScreen(
     val lazyListState = rememberLazyListState()
 
     CollapsableAwareToolbarScaffold(
-        backgroundColor = MaterialTheme.colorScheme.background,
+        backgroundColor = MaterialTheme.colorScheme.surface,
         modifier = Modifier.fillMaxSize(),
         state = state,
         scrollStrategy = ScrollStrategy.ExitUntilCollapsed,
@@ -99,7 +100,7 @@ fun SplitTunnelingScreen(
                     whenExpanded = Alignment.BottomStart
                 )
             CollapsingTopBar(
-                backgroundColor = MaterialTheme.colorScheme.background,
+                backgroundColor = MaterialTheme.colorScheme.surface,
                 onBackClicked = { onBackClick() },
                 title = stringResource(id = R.string.split_tunneling),
                 progress = progress,
@@ -116,6 +117,7 @@ fun SplitTunnelingScreen(
             item(key = CommonContentKey.DESCRIPTION, contentType = ContentType.DESCRIPTION) {
                 Text(
                     style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = AlphaDescription),
                     text = stringResource(id = R.string.split_tunneling_description),
                     modifier =
                         Modifier.padding(
@@ -129,7 +131,7 @@ fun SplitTunnelingScreen(
                 SplitTunnelingUiState.Loading -> {
                     item(key = CommonContentKey.PROGRESS, contentType = ContentType.PROGRESS) {
                         CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.onBackground,
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier =
                                 Modifier.size(
                                     width = Dimens.progressIndicatorSize,
@@ -148,7 +150,8 @@ fun SplitTunnelingScreen(
                                 title = {
                                     Text(
                                         text = stringResource(id = R.string.exclude_applications),
-                                        style = MaterialTheme.typography.titleMedium
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onPrimary
                                     )
                                 },
                                 bodyView = {},
@@ -193,7 +196,8 @@ fun SplitTunnelingScreen(
                             title = {
                                 Text(
                                     text = stringResource(id = R.string.all_applications),
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onPrimary
                                 )
                             },
                             bodyView = {},

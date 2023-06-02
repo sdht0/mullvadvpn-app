@@ -12,12 +12,11 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -26,16 +25,13 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import net.mullvad.mullvadvpn.R
 import net.mullvad.mullvadvpn.compose.textfield.MtuTextField
-import net.mullvad.mullvadvpn.compose.theme.MullvadBlue
-import net.mullvad.mullvadvpn.compose.theme.MullvadDarkBlue
-import net.mullvad.mullvadvpn.compose.theme.MullvadWhite
-import net.mullvad.mullvadvpn.compose.theme.MullvadWhite20
-import net.mullvad.mullvadvpn.compose.theme.MullvadWhite60
+import net.mullvad.mullvadvpn.compose.theme.AlphaDescription
+import net.mullvad.mullvadvpn.compose.theme.AlphaDisable
+import net.mullvad.mullvadvpn.compose.theme.AlphaInactive
 import net.mullvad.mullvadvpn.constant.MTU_MAX_VALUE
 import net.mullvad.mullvadvpn.constant.MTU_MIN_VALUE
 import net.mullvad.mullvadvpn.util.isValidMtu
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun MtuDialog(
     mtuValue: String,
@@ -66,12 +62,12 @@ fun MtuDialog(
                 Modifier
                     // Related to the fix for https://issuetracker.google.com/issues/221643630
                     .fillMaxWidth(0.8f)
-                    .background(color = MullvadDarkBlue)
+                    .background(color = MaterialTheme.colorScheme.surface)
                     .padding(dialogPadding)
             ) {
                 Text(
                     text = stringResource(id = R.string.wireguard_mtu),
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = textBigSize
                 )
 
@@ -105,7 +101,7 @@ fun MtuDialog(
                             MTU_MAX_VALUE
                         ),
                     fontSize = textSmallSize,
-                    color = MullvadWhite60,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = AlphaDescription),
                     modifier = Modifier.padding(top = smallPadding)
                 )
 
@@ -114,10 +110,10 @@ fun MtuDialog(
                         Modifier.padding(top = mediumPadding).height(buttonSize).fillMaxWidth(),
                     colors =
                         ButtonDefaults.buttonColors(
-                            backgroundColor = MullvadBlue,
-                            contentColor = MullvadWhite,
-                            disabledContentColor = MullvadWhite60,
-                            disabledBackgroundColor = MullvadWhite20
+                            backgroundColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = AlphaInactive),
+                            disabledBackgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = AlphaDisable)
                         ),
                     enabled = isValidMtu,
                     onClick = { onSave() }
@@ -133,8 +129,8 @@ fun MtuDialog(
                             .fillMaxWidth(),
                     colors =
                         ButtonDefaults.buttonColors(
-                            backgroundColor = MullvadBlue,
-                            contentColor = MullvadWhite
+                            backgroundColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
                     onClick = { onRestoreDefaultValue() }
                 ) {
@@ -152,8 +148,8 @@ fun MtuDialog(
                             .fillMaxWidth(),
                     colors =
                         ButtonDefaults.buttonColors(
-                            backgroundColor = MullvadBlue,
-                            contentColor = Color.White
+                            backgroundColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
                     onClick = { onDismiss() }
                 ) {

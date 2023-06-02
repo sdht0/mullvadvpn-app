@@ -11,11 +11,11 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import net.mullvad.mullvadvpn.R
 import net.mullvad.mullvadvpn.compose.component.HtmlText
-import net.mullvad.mullvadvpn.compose.theme.MullvadWhite
+import net.mullvad.mullvadvpn.compose.theme.AppTheme
 
 @Preview
 @Composable
@@ -37,7 +37,9 @@ private fun PreviewChangelogDialogWithTwoLongItems() {
             "The purpose of this specific sample text is to visualize a long text that will " +
             "result in multiple lines in the changelog dialog."
 
-    InfoDialog(message = longPreviewText, additionalInfo = longPreviewText, onDismiss = {})
+    AppTheme {
+        InfoDialog(message = longPreviewText, additionalInfo = longPreviewText, onDismiss = {})
+    }
 }
 
 @Composable
@@ -51,7 +53,7 @@ fun InfoDialog(message: String, additionalInfo: String? = null, onDismiss: () ->
                 modifier = Modifier.fillMaxWidth().height(iconHeight),
                 painter = painterResource(id = R.drawable.icon_info),
                 contentDescription = "",
-                tint = MullvadWhite
+                tint = MaterialTheme.colorScheme.onSurface
             )
         },
         text = {
@@ -61,7 +63,7 @@ fun InfoDialog(message: String, additionalInfo: String? = null, onDismiss: () ->
             ) {
                 Text(
                     text = message,
-                    color = colorResource(id = R.color.white),
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = dimensionResource(id = R.dimen.text_small).value.sp,
                     fontStyle = FontStyle.Normal,
                     textAlign = TextAlign.Start,
@@ -70,7 +72,7 @@ fun InfoDialog(message: String, additionalInfo: String? = null, onDismiss: () ->
                 if (additionalInfo != null) {
                     HtmlText(
                         htmlFormattedString = additionalInfo,
-                        textColor = colorResource(id = R.color.white).toArgb(),
+                        textColor = MaterialTheme.colorScheme.onSurface.toArgb(),
                         textSize = dimensionResource(id = R.dimen.text_small).value,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -86,8 +88,8 @@ fun InfoDialog(message: String, additionalInfo: String? = null, onDismiss: () ->
                         .fillMaxWidth(),
                 colors =
                     ButtonDefaults.buttonColors(
-                        backgroundColor = colorResource(id = R.color.blue),
-                        contentColor = colorResource(id = R.color.white)
+                        backgroundColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
                 onClick = { onDismiss() }
             ) {
@@ -102,6 +104,6 @@ fun InfoDialog(message: String, additionalInfo: String? = null, onDismiss: () ->
                 dismissOnClickOutside = true,
                 dismissOnBackPress = true,
             ),
-        backgroundColor = colorResource(id = R.color.darkBlue)
+        backgroundColor = MaterialTheme.colorScheme.surface
     )
 }

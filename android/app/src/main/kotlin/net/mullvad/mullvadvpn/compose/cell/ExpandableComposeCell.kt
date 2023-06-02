@@ -100,6 +100,7 @@ private fun ExpandableComposeCellBody(
 
         ChevronView(
             isExpanded = isExpanded,
+            color = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.size(Dimens.expandableCellChevronSize)
         )
     }
@@ -118,6 +119,7 @@ fun ContentBlockersDisableModeCellSubtitle(modifier: Modifier) {
     Text(
         text = spanned.toAnnotatedString(boldFontWeight = FontWeight.ExtraBold),
         style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = modifier
     )
 }

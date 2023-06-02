@@ -28,6 +28,7 @@ import net.mullvad.mullvadvpn.compose.component.CollapsingTopBar
 import net.mullvad.mullvadvpn.compose.constant.ContentType
 import net.mullvad.mullvadvpn.compose.state.SelectLocationUiState
 import net.mullvad.mullvadvpn.compose.test.CIRCULAR_PROGRESS_INDICATOR
+import net.mullvad.mullvadvpn.compose.theme.AlphaDescription
 import net.mullvad.mullvadvpn.compose.theme.AppTheme
 import net.mullvad.mullvadvpn.compose.theme.Dimens
 import net.mullvad.mullvadvpn.relaylist.RelayCountry
@@ -55,7 +56,7 @@ fun SelectLocationScreen(
     val progress = state.toolbarState.progress
     LaunchedEffect(Unit) { uiCloseAction.collect { onBackClick() } }
     CollapsableAwareToolbarScaffold(
-        backgroundColor = MaterialTheme.colorScheme.background,
+        backgroundColor = MaterialTheme.colorScheme.surface,
         modifier = Modifier.fillMaxSize(),
         state = state,
         scrollStrategy = ScrollStrategy.ExitUntilCollapsed,
@@ -67,7 +68,7 @@ fun SelectLocationScreen(
                     whenExpanded = Alignment.BottomStart
                 )
             CollapsingTopBar(
-                backgroundColor = MaterialTheme.colorScheme.background,
+                backgroundColor = MaterialTheme.colorScheme.surface,
                 onBackClicked = { onBackClick() },
                 title = stringResource(id = R.string.switch_location),
                 progress = progress,
@@ -82,6 +83,7 @@ fun SelectLocationScreen(
                 Text(
                     text = stringResource(id = R.string.select_location_description),
                     style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = AlphaDescription),
                     modifier = Modifier.padding(horizontal = Dimens.sideMargin)
                 )
             }
@@ -92,7 +94,7 @@ fun SelectLocationScreen(
                 SelectLocationUiState.Loading -> {
                     item(contentType = ContentType.PROGRESS) {
                         CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.onBackground,
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier =
                                 Modifier.size(
                                         width = Dimens.progressIndicatorSize,

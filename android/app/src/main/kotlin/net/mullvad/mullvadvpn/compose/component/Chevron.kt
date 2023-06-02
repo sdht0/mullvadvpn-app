@@ -6,16 +6,16 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import net.mullvad.mullvadvpn.R
 
 @Composable
-fun ChevronView(modifier: Modifier = Modifier, isExpanded: Boolean) {
+fun ChevronView(modifier: Modifier = Modifier, isExpanded: Boolean, color: Color) {
     val resourceId = R.drawable.icon_chevron
     val rotation = remember { Animatable(90f) }
 
@@ -29,6 +29,7 @@ fun ChevronView(modifier: Modifier = Modifier, isExpanded: Boolean) {
     Image(
         painterResource(id = resourceId),
         contentDescription = null,
+        colorFilter = ColorFilter.tint(color),
         modifier = modifier.rotate(rotation.value),
     )
 }

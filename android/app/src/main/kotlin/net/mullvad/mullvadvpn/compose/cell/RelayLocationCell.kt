@@ -120,7 +120,7 @@ private fun PreviewRelayLocationCell() {
 fun RelayLocationCell(
     relay: RelayItem,
     modifier: Modifier = Modifier,
-    activeColor: Color = MaterialTheme.colorScheme.surface,
+    activeColor: Color = MaterialTheme.colorScheme.onPrimary,
     inactiveColor: Color = MaterialTheme.colorScheme.error,
     selectedItem: RelayItem? = null,
     onSelectRelay: (item: RelayItem) -> Unit = {}
@@ -135,11 +135,19 @@ fun RelayLocationCell(
     val expanded = rememberSaveable { mutableStateOf(relay.expanded) }
     val backgroundColor =
         when {
-            selected -> MaterialTheme.colorScheme.inversePrimary
-            relay.type == RelayItemType.Country -> MaterialTheme.colorScheme.primary
-            relay.type == RelayItemType.City -> MaterialTheme.colorScheme.primaryContainer
-            relay.type == RelayItemType.Relay -> MaterialTheme.colorScheme.secondaryContainer
+            selected -> MaterialTheme.colorScheme.secondary
+            relay.type == RelayItemType.Country -> MaterialTheme.colorScheme.primaryContainer
+            relay.type == RelayItemType.City -> MaterialTheme.colorScheme.secondaryContainer
+            relay.type == RelayItemType.Relay -> MaterialTheme.colorScheme.tertiaryContainer
             else -> MaterialTheme.colorScheme.primary
+        }
+    val onBackgroundColor =
+        when {
+            selected -> MaterialTheme.colorScheme.onSecondary
+            relay.type == RelayItemType.Country -> MaterialTheme.colorScheme.onPrimaryContainer
+            relay.type == RelayItemType.City -> MaterialTheme.colorScheme.onSecondaryContainer
+            relay.type == RelayItemType.Relay -> MaterialTheme.colorScheme.onTertiaryContainer
+            else -> MaterialTheme.colorScheme.onPrimary
         }
     Column(
         modifier =
@@ -203,7 +211,7 @@ fun RelayLocationCell(
                 }
                 Text(
                     text = relay.name,
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = onBackgroundColor,
                     modifier =
                         Modifier.weight(1f)
                             .align(Alignment.CenterVertically)
@@ -223,6 +231,7 @@ fun RelayLocationCell(
             if (relay.hasChildren) {
                 ChevronView(
                     isExpanded = expanded.value,
+                    color = onBackgroundColor,
                     modifier =
                         Modifier.fillMaxHeight()
                             .clickable { expanded.value = !expanded.value }
