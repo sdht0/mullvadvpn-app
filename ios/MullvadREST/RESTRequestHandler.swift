@@ -10,10 +10,7 @@ import Foundation
 import MullvadTypes
 
 protocol RESTRequestHandler {
-    func createURLRequest(
-        endpoint: AnyIPEndpoint,
-        authorization: REST.Authorization?
-    ) throws -> REST.Request
+    func createURLRequest(endpoint: AnyIPEndpoint, authorization: REST.Authorization?) throws -> REST.Request
 
     var authorizationProvider: RESTAuthorizationProvider? { get }
 }
@@ -46,10 +43,7 @@ extension REST {
             self.authorizationProvider = authorizationProvider
         }
 
-        func createURLRequest(
-            endpoint: AnyIPEndpoint,
-            authorization: REST.Authorization?
-        ) throws -> REST.Request {
+        func createURLRequest(endpoint: AnyIPEndpoint, authorization: REST.Authorization?) throws -> REST.Request {
             return try _createURLRequest(endpoint, authorization)
         }
     }

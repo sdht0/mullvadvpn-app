@@ -51,7 +51,7 @@ extension REST {
             name: String,
             retryStrategy: REST.RetryStrategy,
             requestHandler: RESTRequestHandler,
-            responseHandler: REST.AnyResponseHandler<Success>
+            responseHandler: some RESTResponseHandler<Success>
         ) -> ProxyTaskFactory<Success> {
             return ProxyTaskFactory(
                 dispatchQueue: dispatchQueue,
@@ -72,7 +72,7 @@ extension REST {
         let name: String
         let retryStrategy: REST.RetryStrategy
         let requestHandler: RESTRequestHandler
-        let responseHandler: REST.AnyResponseHandler<Success>
+        let responseHandler: any RESTResponseHandler<Success>
     }
 
     /**

@@ -9,7 +9,7 @@
 import Foundation
 import MullvadTypes
 
-protocol RESTResponseHandler {
+protocol RESTResponseHandler<Success> {
     associatedtype Success
 
     func handleURLResponse(_ response: HTTPURLResponse, data: Data) -> REST.ResponseHandlerResult<Success>
@@ -38,9 +38,7 @@ extension REST {
             handlerBlock = block
         }
 
-        func handleURLResponse(_ response: HTTPURLResponse, data: Data) -> REST
-            .ResponseHandlerResult<Success>
-        {
+        func handleURLResponse(_ response: HTTPURLResponse, data: Data) -> REST.ResponseHandlerResult<Success> {
             return handlerBlock(response, data)
         }
     }
@@ -51,19 +49,14 @@ extension REST {
     static func defaultResponseHandler<T: Decodable>(
         decoding type: T.Type,
         with decoder: JSONDecoder
-    ) -> AnyResponseHandler<T> {
+    ) -> some RESTResponseHandler<T> {
         return AnyResponseHandler { response, data in
             if HTTPStatus.isSuccess(response.statusCode) {
                 return .decoding {
                     try decoder.decode(type, from: data)
                 }
             } else {
-                return .unhandledResponse(
-                    try? decoder.decode(
-                        ServerErrorResponse.self,
-                        from: data
-                    )
-                )
+                return .unhandledResponse(try? decoder.decode(ServerErrorResponse.self, from: data))
             }
         }
     }
