@@ -12,8 +12,9 @@ use mullvad_types::{
     settings::Settings,
     states::TunnelState,
     version::AppVersionInfo,
+    relay_constraints::RelaySettings,
 };
-use std::{sync::mpsc, thread};
+use std::{sync::mpsc, thread, panic};
 use talpid_types::ErrorExt;
 
 #[derive(Debug, err_derive::Error)]
@@ -187,6 +188,7 @@ impl<'env> JniEventHandler<'env> {
     }
 
     fn run(&mut self) {
+        log::debug!("Handle event");
         while let Ok(event) = self.events.recv() {
             match event {
                 Event::RelayList(relay_list) => self.handle_relay_list_event(relay_list),
@@ -261,12 +263,16 @@ impl<'env> JniEventHandler<'env> {
     fn handle_settings(&self, settings: Settings) {
         let java_settings = settings.into_java(&self.env);
 
+        log::debug!("Handle java settings jni");
+
         let result = self.env.call_method_unchecked(
             self.mullvad_ipc_client,
             self.notify_settings_event,
             JavaType::Primitive(Primitive::Void),
             &[JValue::Object(java_settings.as_obj())],
         );
+
+        log::debug!("Handle result jni");
 
         if let Err(error) = result {
             log::error!(

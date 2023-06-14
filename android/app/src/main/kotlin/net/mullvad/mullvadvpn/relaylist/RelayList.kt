@@ -78,6 +78,7 @@ class RelayList {
                     }
                 }
             }
+            else -> return null
         }
     }
 }

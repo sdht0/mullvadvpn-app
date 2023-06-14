@@ -1,6 +1,6 @@
 package net.mullvad.mullvadvpn.service.endpoint
 
-import kotlin.properties.Delegates.observable
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
@@ -14,12 +14,15 @@ import net.mullvad.mullvadvpn.model.LocationConstraint
 import net.mullvad.mullvadvpn.model.RelayConstraintsUpdate
 import net.mullvad.mullvadvpn.model.RelayList
 import net.mullvad.mullvadvpn.model.RelaySettingsUpdate
+import net.mullvad.mullvadvpn.model.WireguardConstraints
 import net.mullvad.mullvadvpn.service.MullvadDaemon
+import kotlin.properties.Delegates.observable
 
 class RelayListListener(endpoint: ServiceEndpoint) {
     companion object {
         private enum class Command {
             SetRelayLocation,
+            SetWireguardConstraints
         }
     }
 
@@ -30,6 +33,10 @@ class RelayListListener(endpoint: ServiceEndpoint) {
         observable<LocationConstraint?>(null) { _, _, _ ->
             commandChannel.trySendBlocking(Command.SetRelayLocation)
         }
+    private var selectedWireguardConstraints by
+    observable<WireguardConstraints?>(null) { _, _, _ ->
+        commandChannel.trySendBlocking(Command.SetWireguardConstraints)
+    }
 
     var relayList by
         observable<RelayList?>(null) { _, _, relays ->
@@ -47,6 +54,10 @@ class RelayListListener(endpoint: ServiceEndpoint) {
 
         endpoint.dispatcher.registerHandler(Request.SetRelayLocation::class) { request ->
             selectedRelayLocation = request.relayLocation
+        }
+
+        endpoint.dispatcher.registerHandler(Request.SetWireguardConstraints::class) { request ->
+            selectedWireguardConstraints = request.wireguardConstraints
         }
     }
 
@@ -72,7 +83,7 @@ class RelayListListener(endpoint: ServiceEndpoint) {
             try {
                 for (command in channel) {
                     when (command) {
-                        Command.SetRelayLocation -> updateRelayConstraints()
+                        Command.SetRelayLocation, Command.SetWireguardConstraints -> updateRelayConstraints()
                     }
                 }
             } catch (exception: ClosedReceiveChannelException) {
@@ -81,11 +92,14 @@ class RelayListListener(endpoint: ServiceEndpoint) {
         }
 
     private suspend fun updateRelayConstraints() {
-        val constraint: Constraint<LocationConstraint> =
+        val location: Constraint<LocationConstraint> =
             selectedRelayLocation?.let { location -> Constraint.Only(location) } ?: Constraint.Any()
+        val wireguardConstraints: WireguardConstraints? = selectedWireguardConstraints
 
-        val update = RelaySettingsUpdate.Normal(RelayConstraintsUpdate(constraint))
 
+        val update = RelaySettingsUpdate.Normal(RelayConstraintsUpdate(location, wireguardConstraints))
+
+        Log.d("LOLZ", "updateRelaySettings=$update")
         daemon.await().updateRelaySettings(update)
     }
 }
