@@ -76,7 +76,8 @@ enum SettingsManager {
 
     static func setShouldWipeSettings() {
         do {
-            try store.write(Data(), for: .shouldWipeSettings)
+            try store.delete(key: .shouldWipeSettings)
+//            try store.write(Data(), for: .shouldWipeSettings)
         } catch {
             logger.error(
                 error: error,
