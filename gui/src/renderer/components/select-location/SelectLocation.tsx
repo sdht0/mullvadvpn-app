@@ -52,6 +52,7 @@ import {
   StyledSearchBar,
 } from './SelectLocationStyles';
 import { SpacePreAllocationView } from './SpacePreAllocationView';
+import CustomLists from '../CustomLists';
 
 export default function SelectLocation() {
   const history = useHistory();
@@ -224,6 +225,7 @@ export default function SelectLocation() {
             <NavigationScrollbars ref={scrollViewRef}>
               <SpacePreAllocationView ref={spacePreAllocationViewRef}>
                 <StyledContent>
+                  <CustomLists />
                   <SelectLocationContent />
                 </StyledContent>
               </SpacePreAllocationView>
