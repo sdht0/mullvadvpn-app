@@ -725,7 +725,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
 }
 
 /// Enum describing the next relay to connect to.
-private enum NextRelay {
+enum NextRelay {
     /// Connect to pre-selected relay.
     case set(RelaySelectorResult)
 
