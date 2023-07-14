@@ -2,6 +2,7 @@ import { batch, Provider } from 'react-redux';
 import { Router } from 'react-router';
 import { bindActionCreators } from 'redux';
 
+import { hasExpired } from '../shared/account-expiry';
 import { ILinuxSplitTunnelingApplication, IWindowsApplication } from '../shared/application-types';
 import {
   AccountToken,
@@ -885,6 +886,14 @@ export default class AppRenderer {
 
   private setAccountExpiry(expiry?: string) {
     this.reduxActions.account.updateAccountExpiry(expiry);
+    const state = this.reduxStore.getState();
+    if (state.account.status.type === 'ok' && expiry !== undefined) {
+      if (state.account.status.expiredState === undefined && hasExpired(expiry)) {
+        this.history.replaceRoot(RoutePath.expired);
+      } else if (state.account.status.expiredState === 'expired' && !hasExpired(expiry)) {
+        this.history.replaceRoot(RoutePath.timeAdded);
+      }
+    }
   }
 
   private storeAutoStart(autoStart: boolean) {
