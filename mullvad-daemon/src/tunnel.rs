@@ -210,6 +210,7 @@ impl InnerParametersGenerator {
             }
             MullvadEndpoint::Wireguard(endpoint) => {
                 let addresses = if relay.same_ip {
+                    log::debug!("Using \"Same IP\" functionality for this tunnel");
                     vec![*SAME_IP_V4, *SAME_IP_V6]
                 } else {
                     vec![
