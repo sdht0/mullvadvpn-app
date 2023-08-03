@@ -157,30 +157,3 @@ actor PacketTunnelActor {
     }
 
 }
-
-enum LaunchSource: String, CustomStringConvertible {
-    case app, onDemand, system
-
-    var description: String {
-        switch self {
-        case .app, .system:
-            return rawValue
-        case .onDemand:
-            return "on-demand rule"
-        }
-    }
-}
-
-struct StartOptions {
-    var launchSource: LaunchSource
-    var selectorResult: RelaySelectorResult?
-
-    func logFormat() -> String {
-        var s = "Start the tunnel via \(launchSource)"
-        if let selectorResult {
-            s.append(", connect to \(selectorResult.relay.hostname)")
-        }
-        s.append(".")
-        return s
-    }
-}
