@@ -38,13 +38,8 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
     /// WireGuard adapter.
     private var adapter: WireGuardAdapter!
 
-    /// Raised once tunnel establishes connection in the very first time, before calling the system
-    /// completion handler passed into `startTunnel`.
-    private var isConnected = false
-
-    /// Raised once tunnel receives the first call to `stopTunnel()`.
-    /// Once this happens all requests to reconnect the tunnel will be ignored.
-    private var isStopping = false
+    /// Current tunnel provider state.
+    private var state: State = .stopped
 
     /// Flag indicating whether network is reachable.
     private var isNetworkReachable = true
@@ -69,10 +64,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
 
     /// Current selector result.
     private var selectorResult: RelaySelectorResult?
-
-    /// A system completion handler passed from startTunnel and saved for later use once the
-    /// connection is established.
-    private var startTunnelCompletionHandler: (() -> Void)?
 
     /// Tunnel monitor.
     private var tunnelMonitor: TunnelMonitor!
@@ -187,6 +178,10 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
 
     override func startTunnel(options: [String: NSObject]?, completionHandler: @escaping (Error?) -> Void) {
         dispatchQueue.async {
+            guard self.state.canTransition(to: .starting) else { return }
+
+            self.state = .starting(completionHandler: completionHandler)
+
             let tunnelOptions = PacketTunnelOptions(rawOptions: options ?? [:])
             var appSelectorResult: RelaySelectorResult?
 
@@ -232,7 +227,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
 
                 self.configurationError = error
 
-                self.startEmptyTunnel(completionHandler: completionHandler)
+                self.startEmptyTunnel()
                 self.beginTunnelStartupFailureRecovery()
                 return
             }
@@ -251,16 +246,14 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
                             message: "Failed to start the tunnel."
                         )
 
-                        completionHandler(error)
+                        if case let .starting(completionHandler) = self.state {
+                            completionHandler(error)
+                            self.state = .stopped
+                        }
                     } else {
                         self.providerLogger.debug("Started the tunnel.")
 
                         self.tunnelAdapterDidStart()
-
-                        self.startTunnelCompletionHandler = { [weak self] in
-                            self?.isConnected = true
-                            completionHandler(nil)
-                        }
 
                         self.tunnelMonitor.start(
                             probeAddress: tunnelConfiguration.selectorResult.endpoint.ipv4Gateway
@@ -273,12 +266,14 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
 
     override func stopTunnel(with reason: NEProviderStopReason, completionHandler: @escaping () -> Void) {
         dispatchQueue.async {
+            guard self.state.canTransition(to: .stopping) else { return }
+
             self.providerLogger.debug("Stop the tunnel: \(reason)")
 
-            self.isStopping = true
+            self.state = .stopping(completionHandler: completionHandler)
+
             self.cancelTunnelReconnectionTimer()
             self.cancelTunnelStartupFailureRecovery()
-            self.startTunnelCompletionHandler = nil
 
             // Cancel all operations: reconnection requests, network requests.
             self.operationQueue.cancelAllOperations()
@@ -297,7 +292,11 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
                         } else {
                             self.providerLogger.debug("Stopped the tunnel.")
                         }
-                        completionHandler()
+
+                        if case let .stopping(completionHandler) = self.state {
+                            completionHandler()
+                            self.state = .stopped
+                        }
                     }
                 }
             }
@@ -306,6 +305,9 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
 
     override func handleAppMessage(_ messageData: Data, completionHandler: ((Data?) -> Void)?) {
         dispatchQueue.async {
+            // Do not handle app messages if they are received after the tunnel began shutdown procedure.
+            guard self.state.primitiveState == .starting || self.state.primitiveState == .started else { return }
+
             let message: TunnelProviderMessage
             do {
                 message = try TunnelProviderMessage(messageData: messageData)
@@ -389,8 +391,10 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
 
         providerLogger.debug("Connection established.")
 
-        startTunnelCompletionHandler?()
-        startTunnelCompletionHandler = nil
+        if case let .starting(completionHandler) = state {
+            completionHandler(nil)
+            state = .started
+        }
 
         numberOfFailedAttempts = 0
 
@@ -510,7 +514,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
         startDeviceCheck(shouldImmediatelyRotateKeyOnMismatch: true)
     }
 
-    private func startEmptyTunnel(completionHandler: @escaping (Error?) -> Void) {
+    private func startEmptyTunnel() {
         dispatchPrecondition(condition: .onQueue(dispatchQueue))
 
         let emptyTunnelConfiguration = TunnelConfiguration(
@@ -527,16 +531,14 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
                         message: "Failed to start an empty tunnel."
                     )
 
-                    completionHandler(error)
+                    if case let .starting(completionHandler) = self.state {
+                        completionHandler(error)
+                        self.state = .stopped
+                    }
                 } else {
                     self.providerLogger.debug("Started an empty tunnel.")
 
                     self.tunnelAdapterDidStart()
-
-                    self.startTunnelCompletionHandler = { [weak self] in
-                        self?.isConnected = true
-                        completionHandler(nil)
-                    }
                 }
             }
         }
@@ -546,13 +548,12 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
         // Raise reasserting flag, but only if tunnel has already moved to connected state once.
         // Otherwise keep the app in connecting state until it manages to establish the very first
         // connection.
-        if isConnected {
+        if case .started = state {
             reasserting = reconnecting
         }
     }
 
-    private func makeConfiguration(_ nextRelay: NextRelay)
-        throws -> PacketTunnelConfiguration {
+    private func makeConfiguration(_ nextRelay: NextRelay) throws -> PacketTunnelConfiguration {
         let tunnelSettings = try SettingsManager.readSettings()
         let selectorResult: RelaySelectorResult
 
@@ -590,7 +591,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
         dispatchPrecondition(condition: .onQueue(dispatchQueue))
 
         // Ignore all requests to reconnect once tunnel is preparing to stop.
-        guard !isStopping else { return }
+        guard state.primitiveState == .starting || state.primitiveState == .started else { return }
 
         let blockOperation = AsyncBlockOperation(dispatchQueue: dispatchQueue, block: { finish in
             if shouldStopTunnelMonitor {
