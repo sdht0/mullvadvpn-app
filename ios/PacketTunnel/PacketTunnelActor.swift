@@ -31,6 +31,7 @@ actor PacketTunnelActor {
 
     private let adapter: WireGuardAdapter
     private let relayCache = RelayCache(cacheDirectory: ApplicationConfiguration.containerURL)
+    private var numberOfFailedAttempts: UInt = 0
     private var startTask: Task<Void, Error>?
 
     var selectorResult: RelaySelectorResult?
@@ -152,7 +153,7 @@ actor PacketTunnelActor {
         return try RelaySelector.evaluate(
             relays: cachedRelayList.relays,
             constraints: relayConstraints,
-            numberOfFailedAttempts: packetTunnelStatus.numberOfFailedAttempts
+            numberOfFailedAttempts: numberOfFailedAttempts
         )
     }
 
