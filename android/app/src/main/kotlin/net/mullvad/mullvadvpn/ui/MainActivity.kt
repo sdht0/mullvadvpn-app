@@ -95,13 +95,6 @@ open class MainActivity : FragmentActivity() {
             changelogViewModel = get()
         }
 
-        requestedOrientation =
-            if (deviceIsTv) {
-                ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-            } else {
-                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            }
-
         super.onCreate(savedInstanceState)
 
         problemReport.apply {
