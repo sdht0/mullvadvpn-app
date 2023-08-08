@@ -33,6 +33,7 @@ import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
 import net.mullvad.mullvadvpn.R
 import net.mullvad.mullvadvpn.compose.component.CollapsableAwareToolbarScaffold
 import net.mullvad.mullvadvpn.compose.component.CollapsingTopBar
+import net.mullvad.mullvadvpn.compose.component.drawVerticalScrollbar
 import net.mullvad.mullvadvpn.compose.state.AccountUiState
 import net.mullvad.mullvadvpn.lib.common.util.openAccountPageInBrowser
 import net.mullvad.mullvadvpn.viewmodel.AccountViewModel
@@ -100,7 +101,12 @@ fun AccountScreen(
         var itemCount by remember { mutableIntStateOf(8) }
         val scrollState = rememberScrollState()
 
-        Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
+        Column(
+            modifier =
+                Modifier.fillMaxSize()
+                    .drawVerticalScrollbar(scrollState)
+                    .verticalScroll(scrollState)
+        ) {
             repeat(itemCount) {
                 Text(modifier = Modifier.padding(20.dp), text = "Test Text ${it + 1}")
             }
