@@ -11,25 +11,7 @@ import protocol Network.IPAddress
 import struct Network.IPv4Address
 import struct Network.IPv6Address
 
-protocol PingerDelegate: AnyObject {
-    func pinger(
-        _ pinger: Pinger,
-        didReceiveResponseFromSender senderAddress: IPAddress,
-        icmpHeader: ICMPHeader
-    )
-
-    func pinger(
-        _ pinger: Pinger,
-        didFailWithError error: Error
-    )
-}
-
-final class Pinger {
-    struct SendResult {
-        var sequenceNumber: UInt16
-        var bytesSent: UInt16
-    }
-
+final class Pinger: PingerProtocol {
     // Socket read buffer size.
     private static let bufferSize = 65535
 
@@ -40,32 +22,30 @@ final class Pinger {
     private var socket: CFSocket?
     private var readBuffer = [UInt8](repeating: 0, count: bufferSize)
     private let stateLock = NSRecursiveLock()
+    private let eventQueue: DispatchQueue
 
-    private weak var _delegate: PingerDelegate?
-    private let delegateQueue: DispatchQueue
-
-    var delegate: PingerDelegate? {
+    var onEvent: ((PingerEvent) -> Void)? {
         get {
-            stateLock.lock()
-            defer { stateLock.unlock() }
-
-            return _delegate
+            stateLock.withLock {
+                return _onEvent
+            }
         }
         set {
-            stateLock.lock()
-            defer { stateLock.unlock() }
-
-            _delegate = newValue
+            stateLock.withLock {
+                _onEvent = newValue
+            }
         }
     }
+
+    private var _onEvent: ((PingerEvent) -> Void)?
 
     deinit {
         closeSocket()
     }
 
-    init(identifier: UInt16 = 757, delegateQueue: DispatchQueue) {
+    init(identifier: UInt16 = 757, eventQueue: DispatchQueue) {
         self.identifier = identifier
-        self.delegateQueue = delegateQueue
+        self.eventQueue = eventQueue
     }
 
     /// Open socket and optionally bind it to the given interface.
@@ -129,8 +109,8 @@ final class Pinger {
     }
 
     /// Send ping packet to the given address.
-    /// Returns `SendResult` on success, otherwise throws a `Pinger.Error`.
-    func send(to address: IPv4Address) throws -> SendResult {
+    /// Returns `PingerSendResult` on success, otherwise throws a `Pinger.Error`.
+    func send(to address: IPv4Address) throws -> PingerSendResult {
         stateLock.lock()
         defer { stateLock.unlock() }
 
@@ -170,7 +150,7 @@ final class Pinger {
             throw Error.sendPacket(errno)
         }
 
-        return SendResult(sequenceNumber: sequenceNumber, bytesSent: UInt16(bytesSent))
+        return PingerSendResult(sequenceNumber: sequenceNumber, bytesSent: UInt16(bytesSent))
     }
 
     private func nextSequenceNumber() -> UInt16 {
@@ -201,18 +181,14 @@ final class Pinger {
             let icmpHeader = try parseICMPResponse(buffer: &readBuffer, length: bytesRead)
             guard let sender = Self.makeIPAddress(from: address) else { throw Error.parseIPAddress }
 
-            delegateQueue.async {
-                self.delegate?.pinger(
-                    self,
-                    didReceiveResponseFromSender: sender,
-                    icmpHeader: icmpHeader
-                )
+            eventQueue.async {
+                self.onEvent?(.response(sender, icmpHeader.sequenceNumber))
             }
         } catch Pinger.Error.clientIdentifierMismatch {
             // Ignore responses from other senders.
         } catch {
-            delegateQueue.async {
-                self.delegate?.pinger(self, didFailWithError: error)
+            eventQueue.async {
+                self.onEvent?(.failure(error))
             }
         }
     }

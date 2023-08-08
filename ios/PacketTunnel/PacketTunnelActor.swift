@@ -1,5 +1,5 @@
 //
-//  Actor.swift
+//  PacketTunnelActor.swift
 //  PacketTunnel
 //
 //  Created by pronebird on 30/06/2023.
@@ -10,66 +10,41 @@ import Foundation
 import MullvadLogging
 import MullvadTypes
 import NetworkExtension
-import RelayCache
-import RelaySelector
-import TunnelProviderMessaging
-import WireGuardKit
+import struct RelaySelector.RelaySelectorResult
+import struct TunnelProviderMessaging.PacketTunnelOptions
+import WireGuardKitTypes
 
 actor PacketTunnelActor {
-    enum State: Comparable, Equatable {
-        case initial
-        case starting
-        case started
-        case stopping
-        case stopped
-    }
+    @Published var state: State = .initial
 
-    private var state: State = .initial
     private var isNetworkReachable = true
     private var numberOfFailedAttempts: UInt = 0
 
-    private let providerLogger: Logger
-    private let tunnelLogger: Logger
+    private let logger = Logger(label: "PacketTunnelActor")
 
-    private let adapter: WireGuardAdapter
-    private let tunnelMonitor: TunnelMonitor
-    private let relayCache = RelayCache(cacheDirectory: ApplicationConfiguration.containerURL)
+    private let adapter: TunnelAdapterProtocol
+    private var tunnelMonitor: TunnelMonitorProtocol
+    private let relaySelector: RelaySelectorProtocol
 
     private var startTask: Task<Void, Error>?
     private var reconnectTask: Task<Void, Error>?
-
-    private weak var packetTunnelProvider: NEPacketTunnelProvider?
+    private var monitoringTask: Task<Void, Never>?
 
     var selectorResult: RelaySelectorResult?
 
-    init(providerLogger: Logger, tunnelLogger: Logger, packetTunnelProvider: NEPacketTunnelProvider) {
-        self.providerLogger = providerLogger
-        self.tunnelLogger = tunnelLogger
-        self.packetTunnelProvider = packetTunnelProvider
-
-        adapter = WireGuardAdapter(
-            with: packetTunnelProvider,
-            shouldHandleReasserting: false,
-            logHandler: { logLevel, message in
-                tunnelLogger.log(level: logLevel.loggerLevel, "\(message)")
-            }
-        )
-
-        tunnelMonitor = TunnelMonitor(
-            delegateQueue: .main,
-            packetTunnelProvider: packetTunnelProvider,
-            adapter: adapter
-        )
-        tunnelMonitor.delegate = self
+    init(adapter: TunnelAdapterProtocol, tunnelMonitor: TunnelMonitorProtocol, relaySelector: RelaySelectorProtocol) {
+        self.adapter = adapter
+        self.tunnelMonitor = tunnelMonitor
+        self.relaySelector = relaySelector
     }
 
     func start(options: [String: NSObject]?) async throws {
-        guard state == .initial else { return }
+        guard case .initial = state else { return }
 
         state = .starting
 
         let parsedOptions = parseStartOptions(options ?? [:])
-        providerLogger.debug("\(parsedOptions.logFormat())")
+        logger.debug("\(parsedOptions.logFormat())")
 
         startTask = Task {
             do {
@@ -77,10 +52,15 @@ actor PacketTunnelActor {
             } catch {
                 try Task.checkCancellation()
 
-                providerLogger.error(error: error, message: "Failed to start the tunnel.")
-                providerLogger.debug("Starting an empty tunnel.")
+                logger.error(error: error, message: "Failed to start the tunnel.")
 
-                try await startEmptyTunnel()
+                await setErrorState(with: error)
+            }
+        }
+
+        monitoringTask = Task {
+            for await event in monitorEventStream {
+                await handleMonitorEvent(event)
             }
         }
 
@@ -88,7 +68,7 @@ actor PacketTunnelActor {
     }
 
     func stop() async throws {
-        guard state < .stopping else { return }
+        guard state.canTransition(to: .stopping) else { return }
 
         state = .stopping
 
@@ -96,6 +76,7 @@ actor PacketTunnelActor {
 
         startTask?.cancel()
         reconnectTask?.cancel()
+        monitoringTask?.cancel()
 
         try? await startTask?.value
         try? await reconnectTask?.value
@@ -110,6 +91,16 @@ actor PacketTunnelActor {
 
     // MARK: - Private
 
+    private func setErrorState(with error: Error) async {
+        let context = ErrorStateContext(previousState: state, error: error)
+
+        guard state.canTransition(to: .error(context)) else { return }
+
+        state = .error(context)
+
+        try? await startEmptyTunnel()
+    }
+
     private func parseStartOptions(_ options: [String: NSObject]) -> StartOptions {
         let tunnelOptions = PacketTunnelOptions(rawOptions: options)
         var parsedOptions = StartOptions(launchSource: tunnelOptions.isOnDemand() ? .onDemand : .app)
@@ -122,7 +113,7 @@ actor PacketTunnelActor {
                 parsedOptions.launchSource = tunnelOptions.isOnDemand() ? .onDemand : .system
             }
         } catch {
-            providerLogger.error(error: error, message: "Failed to decode relay selector result passed from the app.")
+            logger.error(error: error, message: "Failed to decode relay selector result passed from the app.")
         }
 
         return parsedOptions
@@ -135,7 +126,10 @@ actor PacketTunnelActor {
         let selectorResult: RelaySelectorResult
         switch nextRelay {
         case .automatic:
-            selectorResult = try selectRelayEndpoint(relayConstraints: tunnelSettings.relayConstraints)
+            selectorResult = try relaySelector.selectRelay(
+                with: tunnelSettings.relayConstraints,
+                connectionAttemptFailureCount: numberOfFailedAttempts
+            )
         case let .set(aSelectorResult):
             selectorResult = aSelectorResult
         }
@@ -147,21 +141,11 @@ actor PacketTunnelActor {
         )
     }
 
-    /// Load relay cache with potential networking to refresh the cache and pick the relay for the
-    /// given relay constraints.
-    private func selectRelayEndpoint(relayConstraints: RelayConstraints) throws -> RelaySelectorResult {
-        return try RelaySelector.evaluate(
-            relays: relayCache.read().relays,
-            constraints: relayConstraints,
-            numberOfFailedAttempts: numberOfFailedAttempts
-        )
-    }
-
     private func startTunnel(options: StartOptions) async throws {
         let selectedRelay: NextRelay = options.selectorResult.map { .set($0) } ?? .automatic
         let configuration = try makeConfiguration(selectedRelay)
 
-        try await adapter.start(tunnelConfiguration: configuration.wgTunnelConfig)
+        try await adapter.start(configuration: configuration.wgTunnelConfig)
         selectorResult = configuration.selectorResult
     }
 
@@ -172,19 +156,25 @@ actor PacketTunnelActor {
             peers: []
         )
 
-        try await adapter.start(tunnelConfiguration: emptyTunnelConfiguration)
+        try await adapter.start(configuration: emptyTunnelConfiguration)
     }
 
     private func reconnectTunnel(to nextRelay: NextRelay, stopTunnelMonitor: Bool) async throws {
-        guard state >= .starting && state <= .started else { return }
+        guard state.isReconnecting || state.canTransition(to: .reconnecting) else { return }
+
+        state = .reconnecting
 
         // Cancel previous reconnection attempt
         reconnectTask?.cancel()
+        let oldReconnectTask = reconnectTask
 
         reconnectTask = Task {
+            // Wait for previous task to complete
+            try? await oldReconnectTask?.value
             try Task.checkCancellation()
 
-            guard state == .starting || state == .started else { return }
+            // Make sure we can still reconnect.
+            guard case .reconnecting = state else { return }
 
             if stopTunnelMonitor {
                 tunnelMonitor.stop()
@@ -193,57 +183,50 @@ actor PacketTunnelActor {
             do {
                 let configuration = try makeConfiguration(nextRelay)
 
-                setReasserting(true)
+                try await adapter.update(configuration: configuration.wgTunnelConfig)
 
-                try await adapter.update(tunnelConfiguration: configuration.wgTunnelConfig)
-
-                guard state == .starting || state == .started else { return }
+                try Task.checkCancellation()
+                guard case .reconnecting = state else { return }
 
                 selectorResult = configuration.selectorResult
-                providerLogger.debug("Set tunnel relay to \(configuration.selectorResult.relay.hostname).")
+                logger.debug("Set tunnel relay to \(configuration.selectorResult.relay.hostname).")
 
                 tunnelMonitor.start(probeAddress: configuration.selectorResult.endpoint.ipv4Gateway)
             } catch {
-                providerLogger.error(error: error, message: "Failed to reconnect the tunnel.")
-
-                setReasserting(false)
+                logger.error(error: error, message: "Failed to reconnect the tunnel.")
             }
-        }
-
-        try await reconnectTask?.value
-    }
-
-    private func setReasserting(_ isReasserting: Bool) {
-        if state == .started {
-            packetTunnelProvider?.reasserting = isReasserting
         }
     }
 
     // MARK: - Private: Connection monitoring
 
+    private var monitorEventStream: AsyncStream<TunnelMonitorEvent> {
+        return AsyncStream { cont in
+            tunnelMonitor.onEvent = { event in
+                cont.yield(event)
+            }
+        }
+    }
+
     private func onEstablishConnection() async {
-        guard state < .stopping else { return }
+        if state.canTransition(to: .started) {
+            logger.debug("Connection established.")
 
-        providerLogger.debug("Connection established.")
-
-        if state == .starting {
             state = .started
         }
-
-        setReasserting(false)
     }
 
     private func onHandleConnectionRecovery() async {
-        guard state < .stopping else { return }
+        guard state.isReconnecting || state.canTransition(to: .reconnecting) else { return }
 
         let (value, isOverflow) = numberOfFailedAttempts.addingReportingOverflow(1)
         numberOfFailedAttempts = isOverflow ? 0 : value
 
         if numberOfFailedAttempts.isMultiple(of: 2) {
-            // startDeviceCheck()
+            // TODO: startDeviceCheck()
         }
 
-        providerLogger.debug("Recover connection. Picking next relay...")
+        logger.debug("Recover connection. Picking next relay...")
 
         try? await reconnectTunnel(to: .automatic, stopTunnelMonitor: false)
     }
@@ -251,28 +234,16 @@ actor PacketTunnelActor {
     private func onNetworkReachibilityChange(_ isNetworkReachable: Bool) async {
         self.isNetworkReachable = isNetworkReachable
     }
-}
 
-// MARK: - TunnelMonitorDelegate
-
-extension PacketTunnelActor: TunnelMonitorDelegate {
-    nonisolated func tunnelMonitorDidDetermineConnectionEstablished(_ tunnelMonitor: TunnelMonitor) {
-        Task {
+    private func handleMonitorEvent(_ event: TunnelMonitorEvent) async {
+        switch event {
+        case .connectionEstablished:
             await onEstablishConnection()
-        }
-    }
 
-    nonisolated func tunnelMonitorDelegateShouldHandleConnectionRecovery(_ tunnelMonitor: TunnelMonitor) {
-        Task {
+        case .connectionLost:
             await onHandleConnectionRecovery()
-        }
-    }
 
-    nonisolated func tunnelMonitor(
-        _ tunnelMonitor: TunnelMonitor,
-        networkReachabilityStatusDidChange isNetworkReachable: Bool
-    ) {
-        Task {
+        case let .networkReachabilityChanged(isNetworkReachable):
             await onNetworkReachibilityChange(isNetworkReachable)
         }
     }

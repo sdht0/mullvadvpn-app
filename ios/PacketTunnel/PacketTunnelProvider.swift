@@ -25,7 +25,7 @@ private let tunnelStartupFailureRestartInterval: TimeInterval = 2
 /// Delay before trying to reconnect tunnel after private key rotation.
 private let keyRotationTunnelReconnectionDelay = 60 * 2
 
-class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
+class PacketTunnelProvider: NEPacketTunnelProvider {
     /// Tunnel provider logger.
     private let providerLogger: Logger
 
@@ -169,11 +169,14 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
         )
 
         tunnelMonitor = TunnelMonitor(
-            delegateQueue: dispatchQueue,
-            packetTunnelProvider: self,
-            adapter: adapter
+            eventQueue: dispatchQueue,
+            pinger: Pinger(eventQueue: dispatchQueue),
+            tunnelDeviceInfo: WgAdapterDeviceInfo(adapter: adapter),
+            defaultPathObserver: PacketTunnelPathObserver(packetTunnelProvider: self)
         )
-        tunnelMonitor.delegate = self
+        tunnelMonitor.onEvent = { [weak self] event in
+            self?.handleTunnelMonitorEvent(event)
+        }
     }
 
     override func startTunnel(options: [String: NSObject]?, completionHandler: @escaping (Error?) -> Void) {
@@ -356,9 +359,22 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
         tunnelMonitor.onWake()
     }
 
-    // MARK: - TunnelMonitorDelegate
+    // MARK: - Private: Tunnel monitoring
 
-    func tunnelMonitorDidDetermineConnectionEstablished(_ tunnelMonitor: TunnelMonitor) {
+    private func handleTunnelMonitorEvent(_ event: TunnelMonitorEvent) {
+        switch event {
+        case .connectionEstablished:
+            tunnelConnectionEstablished()
+
+        case .connectionLost:
+            tunnelConnectionLost()
+
+        case let .networkReachabilityChanged(isReachable):
+            tunnelReachabilityChanged(isReachable)
+        }
+    }
+
+    private func tunnelConnectionEstablished() {
         dispatchPrecondition(condition: .onQueue(dispatchQueue))
 
         providerLogger.debug("Connection established.")
@@ -376,7 +392,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
         setReconnecting(false)
     }
 
-    func tunnelMonitorDelegateShouldHandleConnectionRecovery(_ tunnelMonitor: TunnelMonitor) {
+    private func tunnelConnectionLost() {
         dispatchPrecondition(condition: .onQueue(dispatchQueue))
 
         let (value, isOverflow) = numberOfFailedAttempts.addingReportingOverflow(1)
@@ -391,10 +407,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider, TunnelMonitorDelegate {
         reconnectTunnel(to: .automatic, shouldStopTunnelMonitor: false)
     }
 
-    func tunnelMonitor(
-        _ tunnelMonitor: TunnelMonitor,
-        networkReachabilityStatusDidChange isNetworkReachable: Bool
-    ) {
+    private func tunnelReachabilityChanged(_ isNetworkReachable: Bool) {
         dispatchPrecondition(condition: .onQueue(dispatchQueue))
 
         guard self.isNetworkReachable != isNetworkReachable else { return }

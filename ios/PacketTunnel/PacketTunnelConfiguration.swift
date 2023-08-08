@@ -10,7 +10,7 @@ import Foundation
 import MullvadTypes
 import protocol Network.IPAddress
 import RelaySelector
-import WireGuardKit
+import WireGuardKitTypes
 
 struct PacketTunnelConfiguration {
     var deviceState: DeviceState
