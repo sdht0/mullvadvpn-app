@@ -260,18 +260,15 @@ public final class TunnelMonitor: TunnelMonitorProtocol {
         self.defaultPathObserver = defaultPathObserver
 
         self.pinger = pinger
-        self.pinger.onEvent = { [weak self] event in
+        self.pinger.onReply = { [weak self] reply in
             guard let self else { return }
 
-            switch event {
-            case let .response(sender, sequenceNumber):
+            switch reply {
+            case let .success(sender, sequenceNumber):
                 didReceivePing(from: sender, sequenceNumber: sequenceNumber)
 
-            case let .failure(error):
-                logger.error(
-                    error: error,
-                    message: "Failed to parse ICMP response."
-                )
+            case let .parseError(error):
+                logger.error(error: error, message: "Failed to parse ICMP response.")
             }
         }
     }

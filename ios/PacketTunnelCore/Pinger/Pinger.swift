@@ -22,22 +22,22 @@ public final class Pinger: PingerProtocol {
     private var socket: CFSocket?
     private var readBuffer = [UInt8](repeating: 0, count: bufferSize)
     private let stateLock = NSRecursiveLock()
-    private let eventQueue: DispatchQueue
+    private let replyQueue: DispatchQueue
 
-    public var onEvent: ((PingerEvent) -> Void)? {
+    public var onReply: ((PingerReply) -> Void)? {
         get {
             stateLock.withLock {
-                return _onEvent
+                return _onReply
             }
         }
         set {
             stateLock.withLock {
-                _onEvent = newValue
+                _onReply = newValue
             }
         }
     }
 
-    private var _onEvent: ((PingerEvent) -> Void)?
+    private var _onReply: ((PingerReply) -> Void)?
 
     deinit {
         closeSocket()
@@ -45,7 +45,7 @@ public final class Pinger: PingerProtocol {
 
     public init(identifier: UInt16 = 757, eventQueue: DispatchQueue) {
         self.identifier = identifier
-        self.eventQueue = eventQueue
+        self.replyQueue = eventQueue
     }
 
     /// Open socket and optionally bind it to the given interface.
@@ -181,14 +181,14 @@ public final class Pinger: PingerProtocol {
             let icmpHeader = try parseICMPResponse(buffer: &readBuffer, length: bytesRead)
             guard let sender = Self.makeIPAddress(from: address) else { throw Error.parseIPAddress }
 
-            eventQueue.async {
-                self.onEvent?(.response(sender, icmpHeader.sequenceNumber))
+            replyQueue.async {
+                self.onReply?(.success(sender, icmpHeader.sequenceNumber))
             }
         } catch Pinger.Error.clientIdentifierMismatch {
             // Ignore responses from other senders.
         } catch {
-            eventQueue.async {
-                self.onEvent?(.failure(error))
+            replyQueue.async {
+                self.onReply?(.parseError(error))
             }
         }
     }

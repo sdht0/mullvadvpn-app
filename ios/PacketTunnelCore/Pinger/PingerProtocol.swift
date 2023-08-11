@@ -9,9 +9,9 @@
 import Foundation
 import Network
 
-public enum PingerEvent {
-    case response(_ sender: IPAddress, _ sequenceNumber: UInt16)
-    case failure(Error)
+public enum PingerReply {
+    case success(_ sender: IPAddress, _ sequenceNumber: UInt16)
+    case parseError(Error)
 }
 
 public struct PingerSendResult {
@@ -20,7 +20,7 @@ public struct PingerSendResult {
 }
 
 public protocol PingerProtocol {
-    var onEvent: ((PingerEvent) -> Void)? { get set }
+    var onReply: ((PingerReply) -> Void)? { get set }
 
     func openSocket(bindTo interfaceName: String?) throws
     func closeSocket()
