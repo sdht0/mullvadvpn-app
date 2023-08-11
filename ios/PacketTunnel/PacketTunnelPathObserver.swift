@@ -8,6 +8,7 @@
 
 import Foundation
 import NetworkExtension
+import PacketTunnelCore
 
 final class PacketTunnelPathObserver: DefaultPathObserverProtocol {
     private weak var packetTunnelProvider: NEPacketTunnelProvider?

@@ -1,6 +1,6 @@
 //
 //  WgStats.swift
-//  PacketTunnel
+//  PacketTunnelCore
 //
 //  Created by pronebird on 08/08/2022.
 //  Copyright © 2022 Mullvad VPN AB. All rights reserved.
@@ -8,16 +8,16 @@
 
 import Foundation
 
-struct WgStats {
-    let bytesReceived: UInt64
-    let bytesSent: UInt64
+public struct WgStats {
+    public let bytesReceived: UInt64
+    public let bytesSent: UInt64
 
-    init() {
-        bytesReceived = 0
-        bytesSent = 0
+    public init(bytesReceived: UInt64 = 0, bytesSent: UInt64 = 0) {
+        self.bytesReceived = bytesReceived
+        self.bytesSent = bytesSent
     }
 
-    init?(from string: String) {
+    public init?(from string: String) {
         var _bytesReceived: UInt64?
         var _bytesSent: UInt64?
 

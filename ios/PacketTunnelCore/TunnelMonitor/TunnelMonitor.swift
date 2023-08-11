@@ -1,6 +1,6 @@
 //
 //  TunnelMonitor.swift
-//  PacketTunnel
+//  PacketTunnelCore
 //
 //  Created by pronebird on 09/02/2022.
 //  Copyright © 2022 Mullvad VPN AB. All rights reserved.
@@ -8,7 +8,6 @@
 
 import Foundation
 import MullvadLogging
-import MullvadTypes
 import protocol Network.IPAddress
 import struct Network.IPv4Address
 
@@ -48,7 +47,7 @@ private let inboundTrafficTimeout: TimeInterval = 5
 /// Ping is issued after that timeout is exceeded.s
 private let trafficTimeout: TimeInterval = 120
 
-final class TunnelMonitor: TunnelMonitorProtocol {
+public final class TunnelMonitor: TunnelMonitorProtocol {
     /// Connection state.
     private enum ConnectionState {
         /// Initialized and doing nothing.
@@ -237,7 +236,7 @@ final class TunnelMonitor: TunnelMonitorProtocol {
     private let logger = Logger(label: "TunnelMonitor")
 
     private var _onEvent: ((TunnelMonitorEvent) -> Void)?
-    var onEvent: ((TunnelMonitorEvent) -> Void)? {
+    public var onEvent: ((TunnelMonitorEvent) -> Void)? {
         set {
             nslock.withLock {
                 _onEvent = newValue
@@ -250,7 +249,7 @@ final class TunnelMonitor: TunnelMonitorProtocol {
         }
     }
 
-    init(
+    public init(
         eventQueue: DispatchQueue,
         pinger: PingerProtocol,
         tunnelDeviceInfo: TunnelDeviceInfoProtocol,
@@ -281,7 +280,7 @@ final class TunnelMonitor: TunnelMonitorProtocol {
         stop()
     }
 
-    func start(probeAddress: IPv4Address) {
+    public func start(probeAddress: IPv4Address) {
         nslock.lock()
         defer { nslock.unlock() }
 
@@ -298,14 +297,14 @@ final class TunnelMonitor: TunnelMonitorProtocol {
         addDefaultPathObserver()
     }
 
-    func stop() {
+    public func stop() {
         nslock.lock()
         defer { nslock.unlock() }
 
         _stop()
     }
 
-    func onWake() {
+    public func onWake() {
         nslock.lock()
         defer { nslock.unlock() }
 
@@ -324,7 +323,7 @@ final class TunnelMonitor: TunnelMonitorProtocol {
         }
     }
 
-    func onSleep() {
+    public func onSleep() {
         nslock.lock()
         defer { nslock.unlock() }
 

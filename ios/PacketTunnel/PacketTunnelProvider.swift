@@ -14,6 +14,7 @@ import MullvadTypes
 import Network
 import NetworkExtension
 import Operations
+import PacketTunnelCore
 import RelayCache
 import RelaySelector
 import TunnelProviderMessaging

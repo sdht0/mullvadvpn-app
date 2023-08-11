@@ -1,6 +1,6 @@
 //
 //  Pinger.swift
-//  PacketTunnel
+//  PacketTunnelCore
 //
 //  Created by pronebird on 21/02/2022.
 //  Copyright © 2022 Mullvad VPN AB. All rights reserved.
@@ -11,7 +11,7 @@ import protocol Network.IPAddress
 import struct Network.IPv4Address
 import struct Network.IPv6Address
 
-final class Pinger: PingerProtocol {
+public final class Pinger: PingerProtocol {
     // Socket read buffer size.
     private static let bufferSize = 65535
 
@@ -24,7 +24,7 @@ final class Pinger: PingerProtocol {
     private let stateLock = NSRecursiveLock()
     private let eventQueue: DispatchQueue
 
-    var onEvent: ((PingerEvent) -> Void)? {
+    public var onEvent: ((PingerEvent) -> Void)? {
         get {
             stateLock.withLock {
                 return _onEvent
@@ -43,14 +43,14 @@ final class Pinger: PingerProtocol {
         closeSocket()
     }
 
-    init(identifier: UInt16 = 757, eventQueue: DispatchQueue) {
+    public init(identifier: UInt16 = 757, eventQueue: DispatchQueue) {
         self.identifier = identifier
         self.eventQueue = eventQueue
     }
 
     /// Open socket and optionally bind it to the given interface.
     /// Automatically closes the previously opened socket when called multiple times in a row.
-    func openSocket(bindTo interfaceName: String?) throws {
+    public func openSocket(bindTo interfaceName: String?) throws {
         stateLock.lock()
         defer { stateLock.unlock() }
 
@@ -97,7 +97,7 @@ final class Pinger: PingerProtocol {
         socket = newSocket
     }
 
-    func closeSocket() {
+    public func closeSocket() {
         stateLock.lock()
         defer { stateLock.unlock() }
 
@@ -110,7 +110,7 @@ final class Pinger: PingerProtocol {
 
     /// Send ping packet to the given address.
     /// Returns `PingerSendResult` on success, otherwise throws a `Pinger.Error`.
-    func send(to address: IPv4Address) throws -> PingerSendResult {
+    public func send(to address: IPv4Address) throws -> PingerSendResult {
         stateLock.lock()
         defer { stateLock.unlock() }
 
@@ -316,7 +316,7 @@ final class Pinger: PingerProtocol {
 }
 
 extension Pinger {
-    enum Error: LocalizedError {
+    public enum Error: LocalizedError {
         /// Failure to create a socket.
         case createSocket
 
@@ -347,7 +347,7 @@ extension Pinger {
         /// Failure to parse IP address.
         case parseIPAddress
 
-        var errorDescription: String? {
+        public var errorDescription: String? {
             switch self {
             case .createSocket:
                 return "Failure to create socket."
@@ -373,7 +373,7 @@ extension Pinger {
         }
     }
 
-    enum MalformedResponseReason {
+    public enum MalformedResponseReason {
         case ipv4PacketTooSmall
         case icmpHeaderTooSmall
         case invalidIPVersion

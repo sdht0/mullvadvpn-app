@@ -1,16 +1,15 @@
 //
 //  DefaultPathObserverProtocol.swift
-//  PacketTunnel
+//  PacketTunnelCore
 //
 //  Created by pronebird on 10/08/2023.
 //  Copyright © 2023 Mullvad VPN AB. All rights reserved.
 //
 
 import Foundation
-import MullvadTypes
 import NetworkExtension
 
-protocol DefaultPathObserverProtocol {
+public protocol DefaultPathObserverProtocol {
     /// Returns current default path or `nil` if unknown yet.
     var defaultPath: NetworkPath? { get }
 
@@ -19,10 +18,10 @@ protocol DefaultPathObserverProtocol {
     func observe(_ body: @escaping (NetworkPath) -> Void) -> DefaultPathObservation
 }
 
-protocol DefaultPathObservation {
+public protocol DefaultPathObservation {
     func invalidate()
 }
 
-protocol NetworkPath {
+public protocol NetworkPath {
     var status: NetworkExtension.NWPathStatus { get }
 }

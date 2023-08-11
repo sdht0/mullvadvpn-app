@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import PacketTunnelCore
 import WireGuardKit
 
 struct WgAdapterDeviceInfo: TunnelDeviceInfoProtocol {

@@ -10,6 +10,7 @@ import Foundation
 import MullvadLogging
 import MullvadTypes
 import NetworkExtension
+import PacketTunnelCore
 import struct RelaySelector.RelaySelectorResult
 import struct TunnelProviderMessaging.PacketTunnelOptions
 import WireGuardKitTypes

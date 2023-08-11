@@ -1,6 +1,6 @@
 //
 //  PingerProtocol.swift
-//  PacketTunnel
+//  PacketTunnelCore
 //
 //  Created by pronebird on 10/08/2023.
 //  Copyright © 2023 Mullvad VPN AB. All rights reserved.
@@ -9,17 +9,17 @@
 import Foundation
 import Network
 
-enum PingerEvent {
+public enum PingerEvent {
     case response(_ sender: IPAddress, _ sequenceNumber: UInt16)
     case failure(Error)
 }
 
-struct PingerSendResult {
-    var sequenceNumber: UInt16
-    var bytesSent: UInt16
+public struct PingerSendResult {
+    public var sequenceNumber: UInt16
+    public var bytesSent: UInt16
 }
 
-protocol PingerProtocol {
+public protocol PingerProtocol {
     var onEvent: ((PingerEvent) -> Void)? { get set }
 
     func openSocket(bindTo interfaceName: String?) throws

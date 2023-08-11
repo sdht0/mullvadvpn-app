@@ -1,6 +1,6 @@
 //
 //  TunnelMonitorProtocol.swift
-//  PacketTunnel
+//  PacketTunnelCore
 //
 //  Created by pronebird on 10/08/2023.
 //  Copyright © 2023 Mullvad VPN AB. All rights reserved.
@@ -10,11 +10,11 @@ import Foundation
 import Network
 
 /// Tunnel monitor event.
-enum TunnelMonitorEvent {
+public enum TunnelMonitorEvent {
     /// Dispatched after receiving the first ping response
     case connectionEstablished
 
-    /// Dispatched when connection stops receivingg ping responses.
+    /// Dispatched when connection stops receiving ping responses.
     /// The handler is responsible to reconfigure the tunnel and call `TunnelMonitorProtocol.start(probeAddress:)` to resume connection monitoring.
     case connectionLost
 
@@ -22,7 +22,7 @@ enum TunnelMonitorEvent {
     case networkReachabilityChanged(_ isNetworkReachable: Bool)
 }
 
-protocol TunnelMonitorProtocol {
+public protocol TunnelMonitorProtocol {
     /// Event handler that starts receiving events after the call to `start(probeAddress:)`.
     var onEvent: ((TunnelMonitorEvent) -> Void)? { get set }
 
